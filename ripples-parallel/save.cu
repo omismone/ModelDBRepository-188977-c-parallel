@@ -1,15 +1,15 @@
 #include "omislib.cuh"
 
-#define RELPATH "C:\\Users\\mclab\\Desktop\\simone\\thesis\\ripples-parallel\\ripples-parallel\\scripts\\data\\"
+#define RELPATH ".\\scripts\\data\\"
 #define BUF 1024
 
 void save(struct Veg* veg, struct vec* lfp, struct Tsp* tspE, struct Tsp* tspI, struct Inp* inp, struct inpseq* inps, int T, int NE, int NI) {
 
     printf("\nsaving results..\n");
-
     char filename[BUF];
     char tmp[BUF];
     FILE* fp;
+
 
     /* veg */
     //veg.ne

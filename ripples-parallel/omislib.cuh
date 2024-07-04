@@ -10,7 +10,6 @@
 
 #define PI 3.14159265358979323846
 
-
 /*
 *   Array structure that contains the array and its size.
 */
@@ -176,15 +175,23 @@ struct Inp {
 
 
 /*
-*   run the simulation.
+*    run the simulation.
 */
 void NetworkRunSeqt(struct pm p, struct inpseq inps, int NE, int NI, double T, struct options opt);
 
 /*
-*   save the results in .txt files
+*    save the results in .txt files
 */
 void save(struct Veg* veg, struct vec* lfp, struct Tsp* tspE, struct Tsp* tspI, struct Inp* inp, struct inpseq* inps, int T, int NE, int NI);
 
+/*
+*    generate a random gaussian number.
+*/
 double RandNormal();
 
-void productMatMat(struct matrix* c, struct matrix* a, struct matrix* b);
+__global__ void kernelGen(int NE, int NI, double* dev_sE, double* dev_sIE, double* dev_sI, double* dev_sEI, double* dev_GEE, double* dev_GIE, double* dev_GII, double* dev_GEI, double* dev_tmp1, double* dev_tmp2, double* dev_tmp3, double* dev_tmp4, int idt, int seqN, double* dev_vE, double* dev_vI, double* dev_lfp, double* dev_vbarE, double* dev_vbarI, double* dev_vegE, double* dev_vegI, int Eeg, int Ieg, int opt_storecurrs, double* dev_isynbarEtoE, double* dev_isynbarItoE, int lfp_size, double pVrevE, double pVrevI, double pglE, double pElE, double pslpE, double pVtE, double pCE, double paE, double ptwE, double pVrE, double pbE, double pglI, double pElI, double pslpI, double pVtI, double pCI, double paI, double ptwI, double pVrI, double pbI, double* dev_wE, double* dev_wI, double* dev_Enoise, double* dev_Inoise, int dev_Enoise_size_1, int dev_Inoise_size_1, double dev_dt, double* dev_erE, double* dev_edE, double* dev_erEI, double* dev_edEI, double* dev_erI, double* dev_edI, double* dev_erIE, double* dev_edIE, double dev_fdE, double dev_frE, double dev_fdEI, double dev_frEI, double dev_pvsE, double dev_pvsEI, double dev_fdI, double dev_frI, double dev_fdIE, double dev_frIE, double dev_pvsI, double dev_pvsIE, double* dev_tspEtimes, double* dev_tspEcelln, double* dev_tspItimes, double* dev_tspIcelln, int* dev_tspE_count, int* dev_tspI_count, double* dev_t);
+
+__global__ void kernelE(int NE, int NI, double* dev_sE, double* dev_sIE, double* dev_sI, double* dev_sEI, double* dev_GEE, double* dev_GIE, double* dev_GII, double* dev_GEI, double* dev_tmp1, double* dev_tmp2, double* dev_tmp3, double* dev_tmp4, int idt, int seqN, double* dev_vE, double* dev_vI, double* dev_lfp, double* dev_vbarE, double* dev_vbarI, double* dev_vegE, double* dev_vegI, int Eeg, int Ieg, int opt_storecurrs, double* dev_isynbarEtoE, double* dev_isynbarItoE, int lfp_size, double pVrevE, double pVrevI, double pglE, double pElE, double pslpE, double pVtE, double pCE, double paE, double ptwE, double pVrE, double pbE, double pglI, double pElI, double pslpI, double pVtI, double pCI, double paI, double ptwI, double pVrI, double pbI, double* dev_wE, double* dev_wI, double* dev_Enoise, double* dev_Inoise, int dev_Enoise_size_1, int dev_Inoise_size_1, double dev_dt, double* dev_erE, double* dev_edE, double* dev_erEI, double* dev_edEI, double* dev_erI, double* dev_edI, double* dev_erIE, double* dev_edIE, double dev_fdE, double dev_frE, double dev_fdEI, double dev_frEI, double dev_pvsE, double dev_pvsEI, double dev_fdI, double dev_frI, double dev_fdIE, double dev_frIE, double dev_pvsI, double dev_pvsIE, double* dev_tspEtimes, double* dev_tspEcelln, double* dev_tspItimes, double* dev_tspIcelln, int* dev_tspE_count, int* dev_tspI_count, double* dev_t);
+
+__global__ void kernelI(int NE, int NI, double* dev_sE, double* dev_sIE, double* dev_sI, double* dev_sEI, double* dev_GEE, double* dev_GIE, double* dev_GII, double* dev_GEI, double* dev_tmp1, double* dev_tmp2, double* dev_tmp3, double* dev_tmp4, int idt, int seqN, double* dev_vE, double* dev_vI, double* dev_lfp, double* dev_vbarE, double* dev_vbarI, double* dev_vegE, double* dev_vegI, int Eeg, int Ieg, int opt_storecurrs, double* dev_isynbarEtoE, double* dev_isynbarItoE, int lfp_size, double pVrevE, double pVrevI, double pglE, double pElE, double pslpE, double pVtE, double pCE, double paE, double ptwE, double pVrE, double pbE, double pglI, double pElI, double pslpI, double pVtI, double pCI, double paI, double ptwI, double pVrI, double pbI, double* dev_wE, double* dev_wI, double* dev_Enoise, double* dev_Inoise, int dev_Enoise_size_1, int dev_Inoise_size_1, double dev_dt, double* dev_erE, double* dev_edE, double* dev_erEI, double* dev_edEI, double* dev_erI, double* dev_edI, double* dev_erIE, double* dev_edIE, double dev_fdE, double dev_frE, double dev_fdEI, double dev_frEI, double dev_pvsE, double dev_pvsEI, double dev_fdI, double dev_frI, double dev_fdIE, double dev_frIE, double dev_pvsI, double dev_pvsIE, double* dev_tspEtimes, double* dev_tspEcelln, double* dev_tspItimes, double* dev_tspIcelln, int* dev_tspE_count, int* dev_tspI_count, double* dev_t);
+

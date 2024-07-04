@@ -4,7 +4,6 @@ int main() {
 
     /* Randomize*/
     srand(time(NULL));
-    //srand(14);
 
     struct pm p;
     p.CE = 200;     //pF
@@ -22,7 +21,7 @@ int main() {
     p.ElI = -70;    //mV
     p.aI = 2;
     p.bI = 10;
-    p.slpI = 2;     //mV
+    p.slpI = 2;     //mV 
     p.twI = 30;     //ms
     p.VtI = -50;    //mV
     p.VrI = -58;    //mV
