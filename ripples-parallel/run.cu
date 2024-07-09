@@ -65,7 +65,7 @@ void Transpose(struct matrix* mat) {
     *mat = res;
 }
 
-void NetworkRunSeqt(struct pm p, struct inpseq inps, int NE, int NI, double T, struct options opt) {
+void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, int NI, double T, struct options opt) {
     /*outputs*/
     struct Conn conn;
     struct Vbar vbar;
@@ -152,8 +152,8 @@ void NetworkRunSeqt(struct pm p, struct inpseq inps, int NE, int NI, double T, s
     free(NEseq);
 
     /* synapses */
-    printf("wire ntwk - ");
-    clock_t tic = clock();
+    //printf("wire ntwk - ");
+    //clock_t tic = clock();
     if (opt.novar) {
         p.gvarEE = 0;
         p.gvarII = 0;
@@ -224,8 +224,8 @@ void NetworkRunSeqt(struct pm p, struct inpseq inps, int NE, int NI, double T, s
     conn.ItoE = GIE;
     Transpose(&GIE); // after is used only transposed
 
-    clock_t toc = clock();
-    printf("elapsed time is %.2lf seconds.\n", (double)(toc - tic) / CLOCKS_PER_SEC);
+    //clock_t toc = clock();
+    //printf("elapsed time is %.2lf seconds.\n", (double)(toc - tic) / CLOCKS_PER_SEC);
 
 
     /* initialize sim */
@@ -383,7 +383,7 @@ void NetworkRunSeqt(struct pm p, struct inpseq inps, int NE, int NI, double T, s
 
     while (seqN <= T) {
         // reading the noise, to have it in a binary file @see ./scripts/SaveNoise.m 
-        printf("[reading noise]\n");
+        //printf("[reading noise]\n");
 
         FILE* fp = NULL;
         if (seqN == 1)
@@ -428,7 +428,7 @@ void NetworkRunSeqt(struct pm p, struct inpseq inps, int NE, int NI, double T, s
         }
         fclose(fp);
 
-        printf("integrating ODE\n");
+        //printf("integrating ODE\n");
         if (seqN == 1) {
             for (int i = 0; i < NE; i++) {
                 vE.val[i] = ((double)rand() / (double)RAND_MAX) * (70 + p.VrE) - 70;
@@ -842,8 +842,8 @@ void NetworkRunSeqt(struct pm p, struct inpseq inps, int NE, int NI, double T, s
         cudaFree(dev_t);
 
         seqN++;
-        clock_t toc = clock();
-        printf("elapsed time is %.2lf seconds.\n", (double)(toc - tic) / CLOCKS_PER_SEC);
+        //clock_t toc = clock();
+        //printf("elapsed time is %.2lf seconds.\n", (double)(toc - tic) / CLOCKS_PER_SEC);
     }
 
     tspE.times.size = tspE_count;
@@ -858,6 +858,9 @@ void NetworkRunSeqt(struct pm p, struct inpseq inps, int NE, int NI, double T, s
 
     inp.Etrace = Einptrace;
     inp.Itrace = Iinptrace;
+
+    clock_t toc = clock();
+    printf("%.3lf\n", (double)(toc - tic_start) / CLOCKS_PER_SEC);
 
     /* free */
     free(MX.val);  

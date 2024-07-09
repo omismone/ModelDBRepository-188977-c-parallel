@@ -2,6 +2,9 @@
 
 int main() {
 
+
+    clock_t tic = clock();
+
     /* Randomize*/
     srand(time(NULL));
 
@@ -98,12 +101,12 @@ int main() {
     //char string[] = "example_1.mat";
     //printf("%s\n", string);
 
-    NetworkRunSeqt(p, in, NE, NI, T, opt);
+    NetworkRunSeqt(tic, p, in, NE, NI, T, opt);
 
     /* free */
     free(in.on.val);
 
-    printf("simulation done.\n");
+    //printf("simulation done.\n");
 
     return 0;
 }

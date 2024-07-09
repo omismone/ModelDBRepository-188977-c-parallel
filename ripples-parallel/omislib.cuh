@@ -177,7 +177,7 @@ struct Inp {
 /*
 *    run the simulation.
 */
-void NetworkRunSeqt(struct pm p, struct inpseq inps, int NE, int NI, double T, struct options opt);
+void NetworkRunSeqt(clock_t tic, struct pm p, struct inpseq inps, int NE, int NI, double T, struct options opt);
 
 /*
 *    save the results in .txt files
