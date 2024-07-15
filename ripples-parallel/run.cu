@@ -67,7 +67,7 @@ void Transpose(struct matrix* mat) {
 
 void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, int NI, double T, struct options opt) {
     /*outputs*/
-    struct Conn conn;
+    //struct Conn conn;
     struct Vbar vbar;
     struct Veg veg;
     struct vec lfp;
@@ -175,7 +175,7 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
         }
     }
 
-    conn.EtoE = GEE;
+    //conn.EtoE = GEE;
     Transpose(&GEE); // after is used only transposed
 
     mn = p.gmaxII / NI;
@@ -191,7 +191,7 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
         }
     }
 
-    conn.ItoI = GII;
+    //conn.ItoI = GII;
 
     mn = p.gmaxEI / NE;
     vr = p.gvarEI * mn;
@@ -206,7 +206,7 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
         }
     }
 
-    conn.EtoI = GEI;
+    //conn.EtoI = GEI;
 
     mn = p.gmaxIE / NI;
     vr = p.gvarIE * mn;
@@ -221,7 +221,7 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
         }
     }
 
-    conn.ItoE = GIE;
+    //conn.ItoE = GIE;
     Transpose(&GIE); // after is used only transposed
 
     //clock_t toc = clock();
@@ -381,6 +381,40 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
     stsec.size = inps.on.size; //max size, then realloc
     stsec.val = (double*)malloc(stsec.size * sizeof(double));
 
+    int L = inps.length - inps.slp - 2;
+    int L0 = 0; // inps.slp/inps.length
+    int L1 = 1; // - L0
+
+    double step = (double)1 / 99;
+    int size = ceil((L1 - L0) / step) + 1;
+    double* tbins, * tons, * toffs;
+    tbins = (double*)malloc(size * sizeof(double));
+    tons = (double*)malloc(size * sizeof(double));
+    toffs = (double*)malloc(size * sizeof(double));
+
+    struct matrix bmps;
+    double* bt, * ebt;
+    double ebt_max = 0;
+    double bt_max = 0;
+    bmps.size[0] = 100;
+    bmps.size[1] = t.size;
+    bmps.val = (double*)malloc(bmps.size[0] * bmps.size[1] * sizeof(double));
+    bt = (double*)malloc(t.size * sizeof(double));
+    ebt = (double*)malloc(t.size * sizeof(double));
+
+    struct matrix tmp;
+    tmp.size[0] = MX.size[0];
+    tmp.size[1] = bmps.size[1];
+    tmp.val = (double*)malloc(tmp.size[0] * tmp.size[1] * sizeof(double));
+
+    struct matrix AEX, AIX;
+    AEX.size[0] = NE;
+    AEX.size[1] = bmps.size[1];
+    AIX.size[0] = NI;
+    AIX.size[1] = bmps.size[1];
+    AEX.val = (double*)malloc(AEX.size[0] * AEX.size[1] * sizeof(double));
+    AIX.val = (double*)malloc(AIX.size[0] * AIX.size[1] * sizeof(double));
+
     while (seqN <= T) {
         // reading the noise, to have it in a binary file @see ./scripts/SaveNoise.m 
         //printf("[reading noise]\n");
@@ -391,13 +425,24 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
         else
             fp = fopen(ENOISE_BIN_PATH2, "rb");
         if (fp == NULL) {
-            perror("error while opening noises files");
+            if(seqN == 1)
+                perror("error while opening noise file \"Enoise1.bin\"");
+            else if (seqN == 2)
+                perror("error while opening noise file \"Enoise2.bin\"");
+            else
+                perror("error while opening noise files");
+
             exit(1);
         }
         int numElements = fread(Enoise.val, sizeof(double), Enoise.size[0] * Enoise.size[1], fp);
         if (numElements < Enoise.size[0] * Enoise.size[1]) {
             if (ferror(fp)) {
-                perror("error while reading noises files");
+                if (seqN == 1)
+                    perror("error while reading Enoise1.bin");
+                else if (seqN == 2)
+                    perror("error while reading Enoise2.bin");
+                else
+                    perror("error while reading noises files");
             }
             else {
                 printf("[[warning: EOF before reading all the noises]]\n");
@@ -412,13 +457,24 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
         else
             fp = fopen(INOISE_BIN_PATH2, "rb");
         if (fp == NULL) {
-            perror("error while opening noises files");
+            if (seqN == 1)
+                perror("error while opening noise file \"Inoise1.bin\"");
+            else if (seqN == 2)
+                perror("error while opening noise file \"Inoise2.bin\"");
+            else
+                perror("error while opening noise files");
+
             exit(1);
         }
         numElements = fread(Inoise.val, sizeof(double), Inoise.size[0] * Inoise.size[1], fp);
         if (numElements < Inoise.size[0] * Inoise.size[1]) {
             if (ferror(fp)) {
-                perror("error while reading noises files");
+                if (seqN == 1)
+                    perror("error while reading Inoise1.bin");
+                else if (seqN == 2)
+                    perror("error while reading Inoise2.bin");
+                else
+                    perror("error while reading noises files");
             }
             else {
                 printf("[[warning: EOF before reading all the noises]]\n");
@@ -466,16 +522,6 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
             }
             stsec.val = (double*)realloc(stsec.val, stsec.size * sizeof(double));
 
-            struct matrix bmps;
-            double* bt, * ebt;
-            double ebt_max = 0;
-            double bt_max = 0;
-            bmps.size[0] = 100;
-            bmps.size[1] = t.size;
-            bmps.val = (double*)malloc(bmps.size[0] * bmps.size[1] * sizeof(double));
-            bt = (double*)malloc(t.size * sizeof(double));
-            ebt = (double*)malloc(t.size * sizeof(double));
-
             for (int j = 0; j < t.size; j++) {
                 for (int i = 0; i < 100; i++) {
                     bmps.val[i * bmps.size[1] + j] = 0;
@@ -489,16 +535,6 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
                 stsec.val[i] = stsec.val[i] - ((seqN - 1) * 1000);
                 double rplton = stsec.val[i];
                 double rpltoff = rplton + inps.length;
-                int L = inps.length - inps.slp - 2;
-                int L0 = 0; // inps.slp/inps.length
-                int L1 = 1; // - L0
-
-                double step = (double)1 / 99;
-                int size = ceil((L1 - L0) / step) + 1;
-                double* tbins, * tons, * toffs;
-                tbins = (double*)malloc(size * sizeof(double));
-                tons = (double*)malloc(size * sizeof(double));
-                toffs = (double*)malloc(size * sizeof(double));
                 for (int k = 0; k < size; k++) {
                     tbins[k] = (L0 + (k * step)) * L;
                     tons[k] = rplton + inps.slp + 2 + tbins[k]; // start the Ecells bumps after the I cells are inhibiting already
@@ -514,23 +550,8 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
                     bt_max = bt_max > bt[j] ? bt_max : bt[j];
                 }
 
-                free(tbins);
-                free(tons);
-                free(toffs);
             }
 
-            struct matrix AEX, AIX;
-            AEX.size[0] = NE;
-            AEX.size[1] = bmps.size[1];
-            AIX.size[0] = NI;
-            AIX.size[1] = bmps.size[1];
-            AEX.val = (double*)malloc(AEX.size[0] * AEX.size[1] * sizeof(double));
-            AIX.val = (double*)malloc(AIX.size[0] * AIX.size[1] * sizeof(double));
-
-            struct matrix tmp;
-            tmp.size[0] = MX.size[0];
-            tmp.size[1] = bmps.size[1];
-            tmp.val = (double*)malloc(tmp.size[0] * tmp.size[1] * sizeof(double));
 
             double* dev_MX = 0;
             double* dev_bmps = 0;
@@ -572,7 +593,6 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
                     AIX.val[k * AIX.size[1] + j] = bt[j];
                 }
             }
-            free(tmp.val);
 
             double Escale = ebt_max;
             double ff;
@@ -607,11 +627,6 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
                 }
             }
 
-            free(bmps.val);
-            free(bt);
-            free(ebt);
-            free(AEX.val);
-            free(AIX.val);
         }
 
         /* init gpu */
@@ -723,9 +738,15 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
         dim3 dimBlockGen(1, 1, 1);
         dim3 dimGridGen(1, 1, 1);
         dim3 dimBlockE(32, 1, 1);
-        dim3 dimGridE(25, 1, 1);
+        int grid_size = NE / 32;
+        if (NE % 32 != 0)
+            grid_size++;
+        dim3 dimGridE(grid_size, 1, 1);
         dim3 dimBlockI(32, 1, 1);
-        dim3 dimGridI(5, 1, 1);
+        grid_size = NI / 32;
+        if (NI % 32 != 0)
+            grid_size++;
+        dim3 dimGridI(grid_size, 1, 1);
 
         const double dev_alpha = 1.0;
         const double dev_beta = 0.0;
@@ -738,9 +759,9 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
             cublasDgemv(handle, CUBLAS_OP_T, NI, NE, &dev_alpha, dev_GEI, NI, dev_sEI, 1, &dev_beta, dev_tmp4, 1);
 
             /* do on gpu */
-            kernelGen << <dimGridGen, dimBlockGen >> > (NE, NI,dev_sE, dev_sIE, dev_sI, dev_sEI, dev_GEE, dev_GIE, dev_GII, dev_GEI, dev_tmp1, dev_tmp2, dev_tmp3, dev_tmp4, idt, seqN, dev_vE, dev_vI, dev_lfp, dev_vbarE, dev_vbarI, dev_vegE, dev_vegI, Eeg, Ieg, opt.storecurrs, dev_isynbarEtoE, dev_isynbarItoE, lfp.size, p.VrevE, p.VrevI, p.glE, p.ElE, p.slpE, p.VtE, p.CE, p.aE, p.twE, p.VrE, p.bE, p.glI, p.ElI, p.slpI, p.VtI, p.CI, p.aI, p.twI, p.VrI, p.bI, dev_wE, dev_wI, dev_Enoise, dev_Inoise, Enoise.size[1], Inoise.size[1], dt, dev_erE, dev_edE, dev_erEI, dev_edEI, dev_erI, dev_edI, dev_erIE, dev_edIE, fdE, frE, fdEI, frEI, pvsE, pvsEI, fdI, frI, fdIE, frIE, pvsI, pvsIE, dev_tspEtimes, dev_tspEcelln, dev_tspItimes, dev_tspIcelln, dev_tspE_count, dev_tspI_count, dev_t);
-            kernelE << <dimGridE, dimBlockE >> > (NE, NI,dev_sE, dev_sIE, dev_sI, dev_sEI, dev_GEE, dev_GIE, dev_GII, dev_GEI, dev_tmp1, dev_tmp2, dev_tmp3, dev_tmp4, idt, seqN, dev_vE, dev_vI, dev_lfp, dev_vbarE, dev_vbarI, dev_vegE, dev_vegI, Eeg, Ieg, opt.storecurrs, dev_isynbarEtoE, dev_isynbarItoE, lfp.size, p.VrevE, p.VrevI, p.glE, p.ElE, p.slpE, p.VtE, p.CE, p.aE, p.twE, p.VrE, p.bE, p.glI, p.ElI, p.slpI, p.VtI, p.CI, p.aI, p.twI, p.VrI, p.bI, dev_wE, dev_wI, dev_Enoise, dev_Inoise, Enoise.size[1], Inoise.size[1], dt, dev_erE, dev_edE, dev_erEI, dev_edEI, dev_erI, dev_edI, dev_erIE, dev_edIE, fdE, frE, fdEI, frEI, pvsE, pvsEI, fdI, frI, fdIE, frIE, pvsI, pvsIE, dev_tspEtimes, dev_tspEcelln, dev_tspItimes, dev_tspIcelln, dev_tspE_count, dev_tspI_count, dev_t);
-            kernelI << <dimGridI, dimBlockI >> > (NE, NI,dev_sE, dev_sIE, dev_sI, dev_sEI, dev_GEE, dev_GIE, dev_GII, dev_GEI, dev_tmp1, dev_tmp2, dev_tmp3, dev_tmp4, idt, seqN, dev_vE, dev_vI, dev_lfp, dev_vbarE, dev_vbarI, dev_vegE, dev_vegI, Eeg, Ieg, opt.storecurrs, dev_isynbarEtoE, dev_isynbarItoE, lfp.size, p.VrevE, p.VrevI, p.glE, p.ElE, p.slpE, p.VtE, p.CE, p.aE, p.twE, p.VrE, p.bE, p.glI, p.ElI, p.slpI, p.VtI, p.CI, p.aI, p.twI, p.VrI, p.bI, dev_wE, dev_wI, dev_Enoise, dev_Inoise, Enoise.size[1], Inoise.size[1], dt, dev_erE, dev_edE, dev_erEI, dev_edEI, dev_erI, dev_edI, dev_erIE, dev_edIE, fdE, frE, fdEI, frEI, pvsE, pvsEI, fdI, frI, fdIE, frIE, pvsI, pvsIE, dev_tspEtimes, dev_tspEcelln, dev_tspItimes, dev_tspIcelln, dev_tspE_count, dev_tspI_count, dev_t);
+            kernelGen << <dimGridGen, dimBlockGen >> > (NE, NI, dev_tmp1, dev_tmp2, idt, seqN, dev_vE, dev_vI, dev_lfp, dev_vbarE, dev_vbarI, dev_vegE, dev_vegI, Eeg, Ieg, opt.storecurrs, dev_isynbarEtoE, dev_isynbarItoE, lfp.size, p.VrevE, p.VrevI, dev_tspEtimes, dev_tspEcelln, dev_tspItimes, dev_tspIcelln, dev_tspE_count, dev_tspI_count, dev_t);
+            kernelE << <dimGridE, dimBlockE >> > (NE, dev_sE, dev_sEI, dev_tmp1, dev_tmp2, idt, dev_vE, p.VrevE, p.VrevI, p.glE, p.ElE, p.slpE, p.VtE, p.CE, p.aE, p.twE, p.VrE, p.bE, dev_wE, dev_Enoise, Enoise.size[1], dt, dev_erE, dev_edE, dev_erEI, dev_edEI, fdE, frE, fdEI, frEI, pvsE, pvsEI);
+            kernelI << <dimGridI, dimBlockI >> > (NI, dev_sIE, dev_sI, dev_tmp3, dev_tmp4, idt, dev_vI, p.VrevE, p.VrevI, p.glI, p.ElI, p.slpI, p.VtI, p.CI, p.aI, p.twI, p.VrI, p.bI, dev_wI, dev_Inoise, Inoise.size[1], dt, dev_erI, dev_edI, dev_erIE, dev_edIE, fdI, frI, fdIE, frIE, pvsI, pvsIE);
         }
 
         /* get back from gpu */
@@ -848,21 +869,35 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
 
     tspE.times.size = tspE_count;
     tspE.celln.size = tspE_count;
-    tspE.times.val = (double *)realloc(tspE.times.val, tspE.times.size * sizeof(double));
-    tspE.celln.val = (double *)realloc(tspE.celln.val, tspE.celln.size * sizeof(double));
+    //tspE.times.val = (double *)realloc(tspE.times.val, tspE.times.size * sizeof(double));
+    //tspE.celln.val = (double *)realloc(tspE.celln.val, tspE.celln.size * sizeof(double));
 
     tspI.times.size = tspI_count;
     tspI.celln.size = tspI_count;
-    tspI.times.val = (double*)realloc(tspI.times.val, tspI.times.size * sizeof(double));
-    tspI.celln.val = (double*)realloc(tspI.celln.val, tspI.celln.size * sizeof(double));
+    //tspI.times.val = (double*)realloc(tspI.times.val, tspI.times.size * sizeof(double));
+    //tspI.celln.val = (double*)realloc(tspI.celln.val, tspI.celln.size * sizeof(double));
 
     inp.Etrace = Einptrace;
     inp.Itrace = Iinptrace;
-
     clock_t toc = clock();
     printf("%.3lf\n", (double)(toc - tic_start) / CLOCKS_PER_SEC);
 
+    fflush(stdout);
     /* free */
+
+    free(tbins);
+    free(tons);
+    free(toffs);
+    
+    free(tmp.val);
+    
+    free(bmps.val);
+    free(bt);
+    free(ebt);
+    
+    free(AEX.val);
+    free(AIX.val);
+    
     free(MX.val);  
     free(GEE.val);
     free(GII.val);
@@ -888,18 +923,6 @@ void NetworkRunSeqt(clock_t tic_start, struct pm p, struct inpseq inps, int NE, 
     free(edIE.val);
     free(stsec.val);
 
-    //free(conn.EtoE.val);
-    //free(conn.EtoI.val);
-    //free(conn.ItoE.val);
-    //free(conn.ItoI.val);
-    //free(vbar.E);
-    //free(vbar.I);
-    //free(isynbar.EtoE.val);
-    //free(isynbar.ItoE.val);
-    //free(seqs);
-
     //save results
     save(&veg, &lfp, &tspE, &tspI, &inp, &inps, T, NE, NI);
-
-    return;
 }

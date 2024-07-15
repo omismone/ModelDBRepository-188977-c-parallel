@@ -104,7 +104,7 @@ int main() {
     NetworkRunSeqt(tic, p, in, NE, NI, T, opt);
 
     /* free */
-    free(in.on.val);
+    //free(in.on.val);
 
     //printf("simulation done.\n");
 

@@ -7,7 +7,6 @@ void save(struct Veg* veg, struct vec* lfp, struct Tsp* tspE, struct Tsp* tspI, 
 
     //printf("\nsaving results..\n");
     char filename[BUF];
-    char tmp[BUF];
     FILE* fp;
 
 

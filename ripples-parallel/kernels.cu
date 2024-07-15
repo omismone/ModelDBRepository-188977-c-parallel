@@ -1,6 +1,6 @@
 #include "omislib.cuh"
 
-__global__ void kernelGen(int NE, int NI, double* dev_sE, double* dev_sIE, double* dev_sI, double* dev_sEI, double* dev_GEE, double* dev_GIE, double* dev_GII, double* dev_GEI, double* dev_tmp1, double* dev_tmp2, double* dev_tmp3, double* dev_tmp4, int idt, int seqN, double* dev_vE, double* dev_vI, double* dev_lfp, double* dev_vbarE, double* dev_vbarI, double* dev_vegE, double* dev_vegI, int Eeg, int Ieg, int opt_storecurrs, double* dev_isynbarEtoE, double* dev_isynbarItoE, int lfp_size, double pVrevE, double pVrevI, double pglE, double pElE, double pslpE, double pVtE, double pCE, double paE, double ptwE, double pVrE, double pbE, double pglI, double pElI, double pslpI, double pVtI, double pCI, double paI, double ptwI, double pVrI, double pbI, double* dev_wE, double* dev_wI, double* dev_Enoise, double* dev_Inoise, int dev_Enoise_size_1, int dev_Inoise_size_1, double dev_dt, double* dev_erE, double* dev_edE, double* dev_erEI, double* dev_edEI, double* dev_erI, double* dev_edI, double* dev_erIE, double* dev_edIE, double dev_fdE, double dev_frE, double dev_fdEI, double dev_frEI, double dev_pvsE, double dev_pvsEI, double dev_fdI, double dev_frI, double dev_fdIE, double dev_frIE, double dev_pvsI, double dev_pvsIE, double* dev_tspEtimes, double* dev_tspEcelln, double* dev_tspItimes, double* dev_tspIcelln, int* dev_tspE_count, int* dev_tspI_count, double* dev_t) {
+__global__ void kernelGen(int NE, int NI, double* dev_tmp1, double* dev_tmp2, int idt, int seqN, double* dev_vE, double* dev_vI, double* dev_lfp, double* dev_vbarE, double* dev_vbarI, double* dev_vegE, double* dev_vegI, int Eeg, int Ieg, int opt_storecurrs, double* dev_isynbarEtoE, double* dev_isynbarItoE, int lfp_size, double pVrevE, double pVrevI, double* dev_tspEtimes, double* dev_tspEcelln, double* dev_tspItimes, double* dev_tspIcelln, int* dev_tspE_count, int* dev_tspI_count, double* dev_t) {
     int dev_ids;
     if (idt % 1000 == 1 && idt >= 1) {
         dev_ids = (idt - 1) / 1000 + 1 + 1000 * (seqN - 1);
@@ -51,8 +51,10 @@ __global__ void kernelGen(int NE, int NI, double* dev_sE, double* dev_sIE, doubl
 
 }
 
-__global__ void kernelE(int NE, int NI, double* dev_sE, double* dev_sIE, double* dev_sI, double* dev_sEI, double* dev_GEE, double* dev_GIE, double* dev_GII, double* dev_GEI, double* dev_tmp1, double* dev_tmp2, double* dev_tmp3, double* dev_tmp4, int idt, int seqN, double* dev_vE, double* dev_vI, double* dev_lfp, double* dev_vbarE, double* dev_vbarI, double* dev_vegE, double* dev_vegI, int Eeg, int Ieg, int opt_storecurrs, double* dev_isynbarEtoE, double* dev_isynbarItoE, int lfp_size, double pVrevE, double pVrevI, double pglE, double pElE, double pslpE, double pVtE, double pCE, double paE, double ptwE, double pVrE, double pbE, double pglI, double pElI, double pslpI, double pVtI, double pCI, double paI, double ptwI, double pVrI, double pbI, double* dev_wE, double* dev_wI, double* dev_Enoise, double* dev_Inoise, int dev_Enoise_size_1, int dev_Inoise_size_1, double dev_dt, double* dev_erE, double* dev_edE, double* dev_erEI, double* dev_edEI, double* dev_erI, double* dev_edI, double* dev_erIE, double* dev_edIE, double dev_fdE, double dev_frE, double dev_fdEI, double dev_frEI, double dev_pvsE, double dev_pvsEI, double dev_fdI, double dev_frI, double dev_fdIE, double dev_frIE, double dev_pvsI, double dev_pvsIE, double* dev_tspEtimes, double* dev_tspEcelln, double* dev_tspItimes, double* dev_tspIcelln, int* dev_tspE_count, int* dev_tspI_count, double* dev_t) {
+__global__ void kernelE(int NE, double* dev_sE, double* dev_sEI, double* dev_tmp1, double* dev_tmp2, int idt, double* dev_vE, double pVrevE, double pVrevI, double pglE, double pElE, double pslpE, double pVtE, double pCE, double paE, double ptwE, double pVrE, double pbE, double* dev_wE, double* dev_Enoise, int dev_Enoise_size_1, double dev_dt, double* dev_erE, double* dev_edE, double* dev_erEI, double* dev_edEI, double dev_fdE, double dev_frE, double dev_fdEI, double dev_frEI, double dev_pvsE, double dev_pvsEI) {
     int idx = threadIdx.x + (blockDim.x * blockIdx.x);
+    if (idx >= NE)
+        return;
     double Isyn, Iapp, Iion, dvdt, dwdt, wEst, vEst;
     vEst = dev_vE[idx];
     wEst = dev_wE[idx];
@@ -84,13 +86,15 @@ __global__ void kernelE(int NE, int NI, double* dev_sE, double* dev_sIE, double*
     }
 }
 
-__global__ void kernelI(int NE, int NI, double* dev_sE, double* dev_sIE, double* dev_sI, double* dev_sEI, double* dev_GEE, double* dev_GIE, double* dev_GII, double* dev_GEI, double* dev_tmp1, double* dev_tmp2, double* dev_tmp3, double* dev_tmp4, int idt, int seqN, double* dev_vE, double* dev_vI, double* dev_lfp, double* dev_vbarE, double* dev_vbarI, double* dev_vegE, double* dev_vegI, int Eeg, int Ieg, int opt_storecurrs, double* dev_isynbarEtoE, double* dev_isynbarItoE, int lfp_size, double pVrevE, double pVrevI, double pglE, double pElE, double pslpE, double pVtE, double pCE, double paE, double ptwE, double pVrE, double pbE, double pglI, double pElI, double pslpI, double pVtI, double pCI, double paI, double ptwI, double pVrI, double pbI, double* dev_wE, double* dev_wI, double* dev_Enoise, double* dev_Inoise, int dev_Enoise_size_1, int dev_Inoise_size_1, double dev_dt, double* dev_erE, double* dev_edE, double* dev_erEI, double* dev_edEI, double* dev_erI, double* dev_edI, double* dev_erIE, double* dev_edIE, double dev_fdE, double dev_frE, double dev_fdEI, double dev_frEI, double dev_pvsE, double dev_pvsEI, double dev_fdI, double dev_frI, double dev_fdIE, double dev_frIE, double dev_pvsI, double dev_pvsIE, double* dev_tspEtimes, double* dev_tspEcelln, double* dev_tspItimes, double* dev_tspIcelln, int* dev_tspE_count, int* dev_tspI_count, double* dev_t) {
+__global__ void kernelI(int NI, double* dev_sIE, double* dev_sI, double* dev_tmp3, double* dev_tmp4, int idt, double* dev_vI, double pVrevE, double pVrevI, double pglI, double pElI, double pslpI, double pVtI, double pCI, double paI, double ptwI, double pVrI, double pbI, double* dev_wI, double* dev_Inoise, int dev_Inoise_size_1, double dev_dt, double* dev_erI, double* dev_edI, double* dev_erIE, double* dev_edIE, double dev_fdI, double dev_frI, double dev_fdIE, double dev_frIE, double dev_pvsI, double dev_pvsIE) {
     int idx = threadIdx.x + (blockDim.x * blockIdx.x);
+    if (idx >= NI)
+        return;
     double Isyn, Iapp, Iion, dvdt, dwdt, wIst, vIst;
     vIst = dev_vI[idx];
     wIst = dev_wI[idx];
     Isyn = (dev_tmp3[idx] * (dev_vI[idx] - pVrevI)) + (dev_tmp4[idx] * (dev_vI[idx] - pVrevE));
-    Iapp = dev_Inoise[idx * dev_Inoise_size_1 + (idt - 1)]; // in the serial version was dev_Enoise_size_1
+    Iapp = dev_Inoise[idx * dev_Inoise_size_1 + (idt - 1)]; 
     Iion = ((-1) * pglI * (dev_vI[idx] - pElI)) + (pglI * pslpI * exp((dev_vI[idx] - pVtI) / pslpI)) - (dev_wI[idx]);
 
     dvdt = ((Iapp + Iion - Isyn) / pCI);
